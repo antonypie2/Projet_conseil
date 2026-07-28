@@ -17,9 +17,9 @@ export default function DashboardView({
       <div className="info-banner">
         Les prix proviennent de Finnhub (niveau gratuit), les actualités/sentiment
         d'Alpha Vantage (niveau gratuit, limité à 25 requêtes/jour et 5/minute), et la
-        recommandation structurée de Claude (Anthropic). Si un quota est atteint ou qu'un
-        appel échoue, la carte concernée affiche un message d'erreur clair avec un bouton
-        pour réessayer, plutôt que des données inventées.
+        recommandation structurée de Gemini (Google, niveau gratuit). Si un quota est
+        atteint ou qu'un appel échoue, la carte concernée affiche un message d'erreur
+        clair avec un bouton pour réessayer, plutôt que des données inventées.
       </div>
 
       <AlertsPanel assetStates={assetStates} onOpenDetail={onOpenDetail} />

@@ -11,17 +11,21 @@ export const FINNHUB_API_KEY =
 export const ALPHA_VANTAGE_API_KEY =
   import.meta.env.VITE_ALPHA_VANTAGE_API_KEY || 'VOTRE_CLE_ALPHA_VANTAGE_ICI'
 
-// Clé API Anthropic (Claude) — utilisée pour générer la recommandation structurée
-// (action, confiance, urgence, facteurs clés, risques). Niveau payant standard :
-// https://console.anthropic.com/settings/keys
+// Clé API Gemini (Google) — utilisée pour générer la recommandation structurée
+// (action, confiance, urgence, facteurs clés, risques). Niveau gratuit, sans
+// carte bancaire : https://aistudio.google.com/apikey
 //
 // ⚠️ Appelée directement depuis le navigateur pour rester cohérent avec
 // l'architecture 100% frontend de ce MVP (comme Finnhub/Alpha Vantage
 // ci-dessus). Cela expose la clé dans le bundle livré au navigateur — comme
 // pour les deux autres clés, c'est un compromis acceptable pour ce MVP de
 // validation, à ne pas reproduire en production sans backend proxy.
-export const ANTHROPIC_API_KEY =
-  import.meta.env.VITE_ANTHROPIC_API_KEY || 'VOTRE_CLE_ANTHROPIC_ICI'
+export const GEMINI_API_KEY =
+  import.meta.env.VITE_GEMINI_API_KEY || 'VOTRE_CLE_GEMINI_ICI'
+
+// Alias "latest" maintenu par Google pour le modèle Flash — évite de coder en
+// dur un identifiant de version qui finira par être retiré.
+export const GEMINI_MODEL = 'gemini-flash-latest'
 
 export const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1'
 export const ALPHA_VANTAGE_BASE_URL = 'https://www.alphavantage.co/query'

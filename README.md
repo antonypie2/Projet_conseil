@@ -15,7 +15,7 @@ crise/urgence.
 4. **Espace portefeuille** (post-onboarding), avec navigation entre 3 onglets :
    - **Portefeuille** — pour chaque actif : cours réel (Finnhub), paragraphe
      factuel construit à partir des actualités réelles (Alpha Vantage), et une
-     **recommandation IA structurée générée par Claude** (action
+     **recommandation IA structurée générée par Gemini** (action
      BUY/SELL/HOLD/STRONG_BUY/STRONG_SELL, score de confiance, urgence,
      justification, facteurs clés, risques, signal de crise). Un panneau
      d'alertes urgentes agrège les actifs en signal fort ou en crise. Ajout/
@@ -29,7 +29,7 @@ crise/urgence.
      dividende, objectif analystes), toutes les actualités, et la même
      recommandation IA.
 
-## Configuration des clés API
+## Configuration des clés API (toutes gratuites)
 
 Trois façons de renseigner vos clés :
 
@@ -42,13 +42,13 @@ Trois façons de renseigner vos clés :
 |---|---|---|
 | `VITE_FINNHUB_API_KEY` | Cours et variations | Gratuit — https://finnhub.io/register (~60 req/min) |
 | `VITE_ALPHA_VANTAGE_API_KEY` | Actualités, sentiment, fondamentaux, historique de prix | Gratuit — https://www.alphavantage.co/support/#api-key (25 req/jour, 5/min) |
-| `VITE_ANTHROPIC_API_KEY` | Recommandation IA structurée (Claude) | Payant à l'usage — https://console.anthropic.com/settings/keys |
+| `VITE_GEMINI_API_KEY` | Recommandation IA structurée (Gemini, Google) | Gratuit, sans carte bancaire — https://aistudio.google.com/apikey |
 
 ⚠️ Le niveau gratuit d'Alpha Vantage est très limité. Les appels sont donc
 échelonnés (un toutes les ~13s, y compris pour les actifs ajoutés depuis
 Découvrir) et chaque carte affiche un message clair — avec un bouton pour
 réessayer — dès que le quota est atteint, plutôt que d'inventer des données.
-Idem pour Claude et Finnhub en cas d'erreur ou de limite de requêtes.
+Idem pour Gemini et Finnhub en cas d'erreur ou de limite de requêtes.
 
 ⚠️ Les trois clés sont appelées **directement depuis le navigateur** (pas de
 backend), donc visibles dans le bundle livré au client — cohérent avec

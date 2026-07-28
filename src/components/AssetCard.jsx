@@ -125,7 +125,7 @@ export default function AssetCard({ assetState, onRetryQuote, onRetryNews, onRet
           )}
 
           <div className="ai-block">
-            <div className="ai-block-header">Recommandation IA (Claude)</div>
+            <div className="ai-block-header">Recommandation IA (Gemini)</div>
 
             {aiStatus === 'loading' && <p className="loading-text">Génération de la recommandation…</p>}
 
