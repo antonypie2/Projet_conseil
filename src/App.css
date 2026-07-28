@@ -1,0 +1,490 @@
+.screen {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+  flex: 1;
+}
+
+.screen-centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100svh;
+  padding: 24px 16px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+}
+
+.intro-card {
+  max-width: 440px;
+  width: 100%;
+  text-align: left;
+}
+
+.wide-card {
+  text-align: left;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+}
+
+.subtitle {
+  margin-bottom: 20px;
+}
+
+form label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+}
+
+input[type='text'],
+input[type='search'] {
+  width: 100%;
+  font: inherit;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--page);
+  color: var(--text-primary);
+  margin-bottom: 20px;
+}
+
+input[type='text']:focus,
+input[type='search']:focus {
+  outline: 2px solid var(--series-1);
+  outline-offset: 1px;
+}
+
+.btn {
+  border-radius: 10px;
+  border: 1px solid transparent;
+  padding: 12px 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--series-1);
+  color: #ffffff;
+  width: 100%;
+}
+
+.btn-primary:not(:disabled):hover {
+  opacity: 0.9;
+}
+
+.btn-secondary {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+.btn-small {
+  padding: 8px 14px;
+  font-size: 14px;
+}
+
+.button-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.button-row .btn {
+  width: auto;
+}
+
+/* --- Portfolio selection ------------------------------------------------ */
+
+.asset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.asset-tile {
+  text-align: left;
+  background: var(--page);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+  font: inherit;
+  color: var(--text-primary);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.asset-tile:hover {
+  border-color: var(--series-1);
+}
+
+.asset-tile-selected {
+  border-color: var(--series-1);
+  background: color-mix(in srgb, var(--series-1) 12%, var(--page));
+}
+
+.asset-tile-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.asset-symbol {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.asset-type-badge {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  background: var(--gridline);
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.asset-name {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.asset-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 24px;
+  color: var(--text-muted);
+}
+
+.selection-summary {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* --- Goals screen -------------------------------------------------------- */
+
+.question-block {
+  border: none;
+  padding: 0;
+  margin: 0 0 24px;
+}
+
+.question-block legend {
+  font-weight: 600;
+  margin-bottom: 10px;
+  padding: 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.option-pill {
+  border: 1px solid var(--border);
+  background: var(--page);
+  color: var(--text-primary);
+  border-radius: 999px;
+  padding: 10px 16px;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.option-pill-selected {
+  background: var(--series-1);
+  border-color: var(--series-1);
+  color: #ffffff;
+}
+
+/* --- Dashboard ------------------------------------------------------------ */
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.info-banner {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+.overview-card {
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  margin-top: 12px;
+}
+
+.breakdown-block h3 {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.breakdown-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.breakdown-label {
+  width: 42%;
+  font-size: 13px;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.breakdown-track {
+  flex: 1;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--gridline);
+  overflow: hidden;
+}
+
+.breakdown-fill {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+}
+
+.breakdown-value {
+  width: 44px;
+  text-align: right;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.asset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.asset-card {
+  text-align: left;
+}
+
+.asset-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.asset-card-symbol {
+  font-size: 18px;
+  font-weight: 700;
+  margin-right: 8px;
+}
+
+.asset-card-name {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.loading-text {
+  color: var(--text-muted);
+  font-style: italic;
+  margin-bottom: 12px;
+}
+
+.error-box {
+  background: color-mix(in srgb, var(--critical) 10%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--critical) 35%, var(--border));
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.error-box p {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.quote-block {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.quote-price {
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.quote-change {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.quote-change.positive {
+  color: var(--good);
+}
+
+.quote-change.negative {
+  color: var(--critical);
+}
+
+.asset-summary {
+  color: var(--text-primary);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.analysis-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.rec-badge.rec-renforcement-possible {
+  background: color-mix(in srgb, var(--good) 16%, var(--surface));
+  color: var(--good);
+}
+
+.rec-badge.rec-signal-de-prudence {
+  background: color-mix(in srgb, var(--critical) 16%, var(--surface));
+  color: var(--critical);
+}
+
+.rec-badge.rec-a-surveiller {
+  background: color-mix(in srgb, var(--warning) 18%, var(--surface));
+  color: var(--warning);
+}
+
+.rec-badge.rec-neutre,
+.rec-badge.rec-donnees-insuffisantes {
+  background: var(--gridline);
+  color: var(--text-secondary);
+}
+
+.conf-badge.conf-eleve {
+  background: color-mix(in srgb, var(--good) 16%, var(--surface));
+  color: var(--good);
+}
+
+.conf-badge.conf-moyen {
+  background: color-mix(in srgb, var(--warning) 18%, var(--surface));
+  color: var(--warning);
+}
+
+.conf-badge.conf-faible {
+  background: color-mix(in srgb, var(--critical) 16%, var(--surface));
+  color: var(--critical);
+}
+
+.confidence-details {
+  font-size: 13px;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--gridline);
+  padding-top: 10px;
+}
+
+.confidence-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.confidence-details ul {
+  margin: 0 0 10px;
+  padding-left: 18px;
+}
+
+.confidence-details li {
+  margin-bottom: 4px;
+}
+
+.recommendation-reason {
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .card {
+    padding: 20px;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+  }
+
+  .breakdown-label {
+    width: 36%;
+  }
+}
