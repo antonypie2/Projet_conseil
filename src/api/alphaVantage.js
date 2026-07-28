@@ -7,25 +7,7 @@ export class AlphaVantageError extends Error {
   }
 }
 
-function parseArticle(item, symbol) {
-  const tickerMatch = (item.ticker_sentiment || []).find((t) => t.ticker === symbol)
-  return {
-    title: item.title,
-    summary: item.summary,
-    source: item.source,
-    url: item.url,
-    timePublished: item.time_published, // format: YYYYMMDDTHHMMSS
-    overallSentimentLabel: item.overall_sentiment_label,
-    overallSentimentScore: Number(item.overall_sentiment_score),
-    relevance: tickerMatch ? Number(tickerMatch.relevance_score) : 0,
-    tickerSentimentScore: tickerMatch ? Number(tickerMatch.ticker_sentiment_score) : null,
-    tickerSentimentLabel: tickerMatch ? tickerMatch.ticker_sentiment_label : null,
-  }
-}
-
-// Récupère les actualités récentes et le sentiment de marché pour un ticker
-// via la fonction NEWS_SENTIMENT d'Alpha Vantage.
-export async function fetchNewsSentiment(symbol) {
+async function avGet(params) {
   if (!ALPHA_VANTAGE_API_KEY || ALPHA_VANTAGE_API_KEY.startsWith('VOTRE_CLE')) {
     throw new AlphaVantageError(
       "Clé API Alpha Vantage manquante. Renseignez-la dans src/config.js ou dans .env (VITE_ALPHA_VANTAGE_API_KEY).",
@@ -33,11 +15,11 @@ export async function fetchNewsSentiment(symbol) {
     )
   }
 
+  const query = new URLSearchParams({ ...params, apikey: ALPHA_VANTAGE_API_KEY })
+
   let response
   try {
-    response = await fetch(
-      `${ALPHA_VANTAGE_BASE_URL}?function=NEWS_SENTIMENT&tickers=${encodeURIComponent(symbol)}&sort=LATEST&limit=50&apikey=${ALPHA_VANTAGE_API_KEY}`,
-    )
+    response = await fetch(`${ALPHA_VANTAGE_BASE_URL}?${query.toString()}`)
   } catch {
     throw new AlphaVantageError('Impossible de contacter Alpha Vantage (réseau indisponible).', 'network')
   }
@@ -69,6 +51,30 @@ export async function fetchNewsSentiment(symbol) {
     throw new AlphaVantageError(`Erreur Alpha Vantage : ${data['Error Message']}`, 'network')
   }
 
+  return data
+}
+
+function parseArticle(item, symbol) {
+  const tickerMatch = (item.ticker_sentiment || []).find((t) => t.ticker === symbol)
+  return {
+    title: item.title,
+    summary: item.summary,
+    source: item.source,
+    url: item.url,
+    timePublished: item.time_published, // format: YYYYMMDDTHHMMSS
+    overallSentimentLabel: item.overall_sentiment_label,
+    overallSentimentScore: Number(item.overall_sentiment_score),
+    relevance: tickerMatch ? Number(tickerMatch.relevance_score) : 0,
+    tickerSentimentScore: tickerMatch ? Number(tickerMatch.ticker_sentiment_score) : null,
+    tickerSentimentLabel: tickerMatch ? tickerMatch.ticker_sentiment_label : null,
+  }
+}
+
+// Récupère les actualités récentes et le sentiment de marché pour un ticker
+// via la fonction NEWS_SENTIMENT d'Alpha Vantage.
+export async function fetchNewsSentiment(symbol) {
+  const data = await avGet({ function: 'NEWS_SENTIMENT', tickers: symbol, sort: 'LATEST', limit: '50' })
+
   const feed = Array.isArray(data.feed) ? data.feed : []
   if (feed.length === 0) {
     return { articles: [] }
@@ -79,4 +85,46 @@ export async function fetchNewsSentiment(symbol) {
     .sort((a, b) => (a.timePublished < b.timePublished ? 1 : -1))
 
   return { articles }
+}
+
+// Récupère les fondamentaux (fonction OVERVIEW) : capitalisation, P/E, beta,
+// rendement du dividende, bornes 52 semaines, objectif de cours des analystes.
+export async function fetchOverview(symbol) {
+  const data = await avGet({ function: 'OVERVIEW', symbol })
+
+  if (!data || !data.Symbol) {
+    throw new AlphaVantageError(`Aucune donnée fondamentale disponible pour ${symbol}.`, 'no_data')
+  }
+
+  return {
+    name: data.Name,
+    sector: data.Sector,
+    industry: data.Industry,
+    marketCap: data.MarketCapitalization,
+    peRatio: data.PERatio,
+    dividendYield: data.DividendYield,
+    eps: data.EPS,
+    week52High: data['52WeekHigh'],
+    week52Low: data['52WeekLow'],
+    beta: data.Beta,
+    analystTarget: data.AnalystTargetPrice,
+  }
+}
+
+// Récupère l'historique de prix quotidien (fonction TIME_SERIES_DAILY,
+// format compact = ~100 dernières séances) pour le graphique de la page détail.
+export async function fetchDailyHistory(symbol) {
+  const data = await avGet({ function: 'TIME_SERIES_DAILY', symbol, outputsize: 'compact' })
+
+  const series = data['Time Series (Daily)']
+  if (!series) {
+    throw new AlphaVantageError(`Aucun historique de prix disponible pour ${symbol}.`, 'no_data')
+  }
+
+  const points = Object.entries(series)
+    .map(([date, values]) => ({ date, close: Number(values['4. close']) }))
+    .sort((a, b) => (a.date < b.date ? -1 : 1))
+    .slice(-60)
+
+  return points
 }

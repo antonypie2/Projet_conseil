@@ -2,9 +2,8 @@
 
 Application React (état en mémoire, sans base de données) qui aide un
 investisseur à comprendre ce qui se passe sur les actifs de son portefeuille :
-prix réel, contexte d'actualité, recommandation et niveau de confiance
-explicite. Objectif de ce MVP : valider ce format avec de vraies données de
-marché avant d'y ajouter une couche de génération de texte par IA.
+prix réel, contexte d'actualité, recommandation IA structurée et alertes de
+crise/urgence.
 
 ## Parcours
 
@@ -13,29 +12,48 @@ marché avant d'y ajouter une couche de génération de texte par IA.
    et ETF larges (actions US, ADR européennes/asiatiques, ETF S&P 500 /
    MSCI World / Nasdaq 100), avec recherche.
 3. **Objectifs** — horizon, niveau de connaissance, objectif principal.
-4. **Dashboard** — pour chaque actif : cours réel (Finnhub), paragraphe
-   factuel construit à partir des actualités réelles (Alpha Vantage),
-   recommandation et niveau de confiance justifié, plus une vue d'ensemble
-   sectorielle/géographique du portefeuille.
+4. **Espace portefeuille** (post-onboarding), avec navigation entre 3 onglets :
+   - **Portefeuille** — pour chaque actif : cours réel (Finnhub), paragraphe
+     factuel construit à partir des actualités réelles (Alpha Vantage), et une
+     **recommandation IA structurée générée par Claude** (action
+     BUY/SELL/HOLD/STRONG_BUY/STRONG_SELL, score de confiance, urgence,
+     justification, facteurs clés, risques, signal de crise). Un panneau
+     d'alertes urgentes agrège les actifs en signal fort ou en crise. Ajout/
+     retrait d'actifs à tout moment.
+   - **Découvrir** — actifs non détenus classés par affinité avec le profil
+     (risque/horizon/secteurs), classement 100% local sans appel API.
+   - **Profil** — tolérance au risque, horizon, secteurs préférés :
+     éditable à tout moment, pilote directement le classement de Découvrir.
+   - **Fiche détail** par actif (accessible depuis Portefeuille/Découvrir) :
+     graphique de prix ~60 séances, fondamentaux (P/E, bêta, capitalisation,
+     dividende, objectif analystes), toutes les actualités, et la même
+     recommandation IA.
 
-## Configuration des clés API (gratuites)
+## Configuration des clés API
 
-Deux façons de renseigner vos clés :
+Trois façons de renseigner vos clés :
 
 - **Fichier `.env`** (recommandé) : copiez `.env.example` en `.env` et
-  renseignez `VITE_FINNHUB_API_KEY` et `VITE_ALPHA_VANTAGE_API_KEY`.
+  renseignez les trois variables ci-dessous.
 - **Ou directement dans `src/config.js`**, en remplaçant les constantes
-  `VOTRE_CLE_FINNHUB_ICI` / `VOTRE_CLE_ALPHA_VANTAGE_ICI`.
+  `VOTRE_CLE_..._ICI`.
 
-Obtenir des clés gratuites :
+| Clé | Usage | Niveau |
+|---|---|---|
+| `VITE_FINNHUB_API_KEY` | Cours et variations | Gratuit — https://finnhub.io/register (~60 req/min) |
+| `VITE_ALPHA_VANTAGE_API_KEY` | Actualités, sentiment, fondamentaux, historique de prix | Gratuit — https://www.alphavantage.co/support/#api-key (25 req/jour, 5/min) |
+| `VITE_ANTHROPIC_API_KEY` | Recommandation IA structurée (Claude) | Payant à l'usage — https://console.anthropic.com/settings/keys |
 
-- Finnhub : https://finnhub.io/register (~60 requêtes/minute)
-- Alpha Vantage : https://www.alphavantage.co/support/#api-key (25 requêtes/jour, 5/minute)
+⚠️ Le niveau gratuit d'Alpha Vantage est très limité. Les appels sont donc
+échelonnés (un toutes les ~13s, y compris pour les actifs ajoutés depuis
+Découvrir) et chaque carte affiche un message clair — avec un bouton pour
+réessayer — dès que le quota est atteint, plutôt que d'inventer des données.
+Idem pour Claude et Finnhub en cas d'erreur ou de limite de requêtes.
 
-⚠️ Le niveau gratuit d'Alpha Vantage est très limité. Le dashboard échelonne
-donc ses appels (un toutes les ~13s) et affiche un message clair — avec un
-bouton pour réessayer — dès que le quota est atteint, plutôt que d'inventer
-des données.
+⚠️ Les trois clés sont appelées **directement depuis le navigateur** (pas de
+backend), donc visibles dans le bundle livré au client — cohérent avec
+l'architecture 100% frontend de ce MVP, mais à ne pas reproduire tel quel en
+production sans un backend qui les protège.
 
 ## Lancer le projet
 

@@ -12,13 +12,44 @@ function slug(label) {
     .replace(/[^a-z0-9]+/g, '-')
 }
 
-export default function AssetCard({ assetState, onRetryQuote, onRetryNews }) {
-  const { asset, quote, quoteStatus, quoteError, news, newsStatus, newsError } = assetState
+const ACTION_LABELS = {
+  STRONG_BUY: 'Achat fort',
+  BUY: 'Achat',
+  HOLD: 'Conserver',
+  SELL: 'Vente',
+  STRONG_SELL: 'Vente forte',
+}
 
-  const settled = quoteStatus !== 'loading' && newsStatus !== 'loading' && newsStatus !== 'queued'
+const URGENCY_LABELS = {
+  NONE: 'Aucune urgence',
+  WATCH: 'À surveiller',
+  URGENT: 'Urgent',
+}
+
+function confidenceBucket(pct) {
+  if (pct >= 70) return 'Élevé'
+  if (pct >= 40) return 'Moyen'
+  return 'Faible'
+}
+
+export default function AssetCard({ assetState, onRetryQuote, onRetryNews, onRetryAi, onRemove, onOpenDetail }) {
+  const {
+    asset,
+    quote,
+    quoteStatus,
+    quoteError,
+    news,
+    newsStatus,
+    newsError,
+    aiStatus,
+    aiRecommendation,
+    aiError,
+  } = assetState
+
+  const newsSettled = quoteStatus !== 'loading' && newsStatus !== 'loading' && newsStatus !== 'queued'
 
   const analysis = useMemo(() => {
-    if (!settled) return null
+    if (!newsSettled) return null
     return analyzeAsset({
       asset,
       quote: quoteStatus === 'ok' ? quote : null,
@@ -26,16 +57,28 @@ export default function AssetCard({ assetState, onRetryQuote, onRetryNews }) {
       quoteError: quoteStatus === 'error' ? quoteError : null,
       newsError: newsStatus === 'error' || newsStatus === 'skipped' ? newsError : null,
     })
-  }, [settled, asset, quote, quoteStatus, quoteError, news, newsStatus, newsError])
+  }, [newsSettled, asset, quote, quoteStatus, quoteError, news, newsStatus, newsError])
 
   return (
-    <div className="card asset-card">
+    <div className="card asset-card" id={`asset-${asset.symbol}`}>
       <div className="asset-card-header">
         <div>
           <span className="asset-card-symbol">{asset.symbol}</span>
           <span className="asset-card-name">{asset.name}</span>
         </div>
-        <span className="asset-type-badge">{asset.type}</span>
+        <div className="asset-card-actions">
+          <span className="asset-type-badge">{asset.type}</span>
+          {onOpenDetail && (
+            <button type="button" className="btn btn-small" onClick={onOpenDetail}>
+              Détail
+            </button>
+          )}
+          {onRemove && (
+            <button type="button" className="btn btn-small btn-ghost" onClick={onRemove}>
+              Retirer
+            </button>
+          )}
+        </div>
       </div>
 
       {quoteStatus === 'loading' && <p className="loading-text">Chargement du cours…</p>}
@@ -59,32 +102,18 @@ export default function AssetCard({ assetState, onRetryQuote, onRetryNews }) {
         </div>
       )}
 
-      {!settled && <p className="loading-text">Analyse des actualités en cours…</p>}
+      {aiStatus === 'ok' && aiRecommendation?.crisis_flag && (
+        <div className="crisis-banner">
+          <strong>⚠️ Signal de crise</strong>
+          <p>{aiRecommendation.crisis_reason}</p>
+        </div>
+      )}
 
-      {settled && analysis && (
+      {!newsSettled && <p className="loading-text">Analyse des actualités en cours…</p>}
+
+      {newsSettled && analysis && (
         <>
           <p className="asset-summary">{analysis.summaryParagraph}</p>
-
-          <div className="analysis-footer">
-            <span className={`badge rec-badge rec-${slug(analysis.recommendation)}`}>
-              {analysis.recommendation}
-            </span>
-            <span className={`badge conf-badge conf-${slug(analysis.confidence)}`}>
-              Confiance : {analysis.confidence}
-            </span>
-          </div>
-
-          <details className="confidence-details">
-            <summary>Pourquoi ce niveau de confiance ?</summary>
-            <ul>
-              {analysis.confidenceReasons.map((reason) => (
-                <li key={reason}>{reason}</li>
-              ))}
-            </ul>
-            <p className="recommendation-reason">
-              <strong>Logique de la recommandation :</strong> {analysis.recommendationReason}
-            </p>
-          </details>
 
           {(newsStatus === 'error' || newsStatus === 'skipped') && (
             <div className="error-box">
@@ -94,6 +123,71 @@ export default function AssetCard({ assetState, onRetryQuote, onRetryNews }) {
               </button>
             </div>
           )}
+
+          <div className="ai-block">
+            <div className="ai-block-header">Recommandation IA (Claude)</div>
+
+            {aiStatus === 'loading' && <p className="loading-text">Génération de la recommandation…</p>}
+
+            {aiStatus === 'error' && (
+              <div className="error-box">
+                <p>⚠️ {aiError}</p>
+                <button type="button" className="btn btn-small" onClick={onRetryAi}>
+                  Réessayer la recommandation
+                </button>
+              </div>
+            )}
+
+            {aiStatus === 'ok' && aiRecommendation && (
+              <>
+                <div className="analysis-footer">
+                  <span className={`badge rec-badge action-${slug(ACTION_LABELS[aiRecommendation.action])}`}>
+                    {ACTION_LABELS[aiRecommendation.action]}
+                  </span>
+                  <span
+                    className={`badge conf-badge conf-${slug(confidenceBucket(aiRecommendation.confidence))}`}
+                  >
+                    Confiance : {aiRecommendation.confidence}%
+                  </span>
+                  {aiRecommendation.urgency !== 'NONE' && (
+                    <span className={`badge urgency-badge urgency-${slug(aiRecommendation.urgency)}`}>
+                      {URGENCY_LABELS[aiRecommendation.urgency]}
+                    </span>
+                  )}
+                </div>
+
+                <p className="ai-rationale">{aiRecommendation.rationale}</p>
+
+                <div className="drivers-risks-grid">
+                  <div>
+                    <div className="drivers-risks-title drivers-title">Facteurs clés</div>
+                    <ul className="drivers-risks-list">
+                      {aiRecommendation.key_drivers.map((d) => (
+                        <li key={d}>{d}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <div className="drivers-risks-title risks-title">Risques</div>
+                    <ul className="drivers-risks-list">
+                      {aiRecommendation.risks.map((r) => (
+                        <li key={r}>{r}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <details className="confidence-details">
+                  <summary>Qualité des données utilisées pour cette analyse</summary>
+                  <ul>
+                    {analysis.confidenceReasons.map((reason) => (
+                      <li key={reason}>{reason}</li>
+                    ))}
+                  </ul>
+                </details>
+              </>
+            )}
+          </div>
         </>
       )}
     </div>

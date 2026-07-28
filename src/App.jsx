@@ -2,7 +2,7 @@ import { useState } from 'react'
 import IdentificationScreen from './screens/IdentificationScreen'
 import PortfolioScreen from './screens/PortfolioScreen'
 import GoalsScreen from './screens/GoalsScreen'
-import DashboardScreen from './screens/DashboardScreen'
+import PortfolioWorkspace from './screens/PortfolioWorkspace'
 import './App.css'
 
 const STEPS = {
@@ -69,7 +69,14 @@ function App() {
     )
   }
 
-  return <DashboardScreen firstName={firstName} selectedSymbols={selectedSymbols} onRestart={restart} />
+  return (
+    <PortfolioWorkspace
+      firstName={firstName}
+      initialSymbols={selectedSymbols}
+      initialGoals={goals}
+      onRestart={restart}
+    />
+  )
 }
 
 export default App
