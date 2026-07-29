@@ -1,0 +1,3 @@
+# Utilisé par le builder Python de Vercel (@vercel/python) pour api/index.py.
+# Source unique des dépendances : backend/requirements.txt.
+-r backend/requirements.txt
