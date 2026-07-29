@@ -1,9 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { getAssetBySymbol } from '../data/assets'
-import { fetchQuote } from '../api/finnhub'
-import { fetchNewsSentiment } from '../api/alphaVantage'
-import { fetchAiRecommendation } from '../api/gemini'
-import { ALPHA_VANTAGE_REQUEST_DELAY_MS } from '../config'
+import {
+  fetchQuote,
+  fetchNewsSentiment,
+  fetchAiRecommendation,
+  addToPortfolio,
+  removeFromPortfolio,
+  updateProfile,
+  initSession,
+} from '../api/backend'
+import { NEWS_REQUEST_DELAY_MS } from '../config'
 import NavBar from '../components/NavBar'
 import DashboardView from './DashboardScreen'
 import DiscoverScreen from './DiscoverScreen'
@@ -34,7 +40,7 @@ function freshAssetState(symbol) {
   }
 }
 
-export default function PortfolioWorkspace({ firstName, initialSymbols, initialGoals, onRestart }) {
+export default function PortfolioWorkspace({ firstName, initialSymbols, initialGoals, needsInit, onRestart }) {
   const [symbols, setSymbols] = useState(initialSymbols)
   const [assetStates, setAssetStates] = useState(() => {
     const map = {}
@@ -83,35 +89,24 @@ export default function PortfolioWorkspace({ firstName, initialSymbols, initialG
     }
   }
 
-  // Alpha Vantage a un quota gratuit très restreint : on enchaîne les demandes
-  // sur une file unique (partagée entre le chargement initial et les ajouts
-  // ultérieurs depuis Découvrir) pour respecter le rythme d'une requête toutes
-  // les ~13s, quelle que soit la provenance de la demande.
+  // Le backend met déjà en cache les réponses Alpha Vantage (quota gratuit
+  // partagé, 25/jour, 5/min), mais on échelonne quand même les demandes pour
+  // ne pas rafaler plusieurs cache-miss simultanés au démarrage.
   function enqueueNews(symbol) {
     newsQueueRef.current = newsQueueRef.current.then(async () => {
-      const result = await loadNewsFor(symbol)
-      if (result.rateLimited) {
-        // Laisse le prochain élément de la file gérer sa propre erreur ;
-        // pas de logique globale de "pause" nécessaire ici car chaque appel
-        // gère déjà son propre message d'erreur.
-      }
-      await delay(ALPHA_VANTAGE_REQUEST_DELAY_MS)
+      await loadNewsFor(symbol)
+      await delay(NEWS_REQUEST_DELAY_MS)
     })
     return newsQueueRef.current
   }
 
-  async function loadAi(assetState) {
-    updateAssetState(assetState.symbol, { aiStatus: 'loading', aiError: null })
+  async function loadAi(symbol, { refresh = false } = {}) {
+    updateAssetState(symbol, { aiStatus: 'loading', aiError: null })
     try {
-      const rec = await fetchAiRecommendation({
-        asset: assetState.asset,
-        quote: assetState.quoteStatus === 'ok' ? assetState.quote : null,
-        articles: assetState.newsStatus === 'ok' ? assetState.news?.articles || [] : [],
-        profile,
-      })
-      updateAssetState(assetState.symbol, { aiStatus: 'ok', aiRecommendation: rec })
+      const rec = await fetchAiRecommendation(symbol, { refresh })
+      updateAssetState(symbol, { aiStatus: 'ok', aiRecommendation: rec })
     } catch (err) {
-      updateAssetState(assetState.symbol, { aiStatus: 'error', aiError: err.message })
+      updateAssetState(symbol, { aiStatus: 'error', aiError: err.message })
     }
   }
 
@@ -122,8 +117,19 @@ export default function PortfolioWorkspace({ firstName, initialSymbols, initialG
     enqueueNews(symbol)
   }
 
-  // Chargement initial du portefeuille sélectionné à l'onboarding.
+  // Persiste la sélection initiale de l'onboarding côté serveur (une seule
+  // fois), puis charge le portefeuille — que la session vienne d'être créée
+  // ou soit restaurée depuis le backend.
   useEffect(() => {
+    if (needsInit) {
+      initSession({
+        firstName,
+        symbols: initialSymbols,
+        horizon: initialGoals.horizon,
+        knowledge: initialGoals.knowledge,
+        objective: initialGoals.objective,
+      }).catch((err) => console.error('initSession failed:', err.message))
+    }
     symbols.forEach(startFetchingAsset)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -135,7 +141,7 @@ export default function PortfolioWorkspace({ firstName, initialSymbols, initialG
       const settled = s.quoteStatus !== 'loading' && s.newsStatus !== 'loading' && s.newsStatus !== 'queued'
       if (settled && !aiTriggeredRef.current.has(s.symbol)) {
         aiTriggeredRef.current.add(s.symbol)
-        loadAi(s)
+        loadAi(s.symbol)
       }
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -145,6 +151,7 @@ export default function PortfolioWorkspace({ firstName, initialSymbols, initialG
     setAssetStates((prev) => (prev[symbol] ? prev : { ...prev, [symbol]: freshAssetState(symbol) }))
     startFetchingAsset(symbol)
     setSymbols((prev) => (prev.includes(symbol) ? prev : [...prev, symbol]))
+    addToPortfolio(symbol).catch((err) => console.error('addToPortfolio failed:', err.message))
   }
 
   function removeSymbol(symbol) {
@@ -155,6 +162,12 @@ export default function PortfolioWorkspace({ firstName, initialSymbols, initialG
     // L'entrée reste en cache dans assetStates (cours/actualités/IA déjà
     // récupérés) au cas où l'actif serait revisité depuis Découvrir, sans
     // nouvel appel API tant que rien n'a expiré.
+    removeFromPortfolio(symbol).catch((err) => console.error('removeFromPortfolio failed:', err.message))
+  }
+
+  function saveProfile(nextProfile) {
+    setProfile(nextProfile)
+    updateProfile(nextProfile).catch((err) => console.error('updateProfile failed:', err.message))
   }
 
   // Ouvre la fiche détail d'un actif, qu'il soit déjà suivi ou non — amorce
@@ -181,7 +194,7 @@ export default function PortfolioWorkspace({ firstName, initialSymbols, initialG
           assetStates={orderedAssetStates}
           onRetryQuote={loadQuote}
           onRetryNews={(symbol) => loadNewsFor(symbol)}
-          onRetryAi={(symbol) => loadAi(assetStates[symbol])}
+          onRetryAi={(symbol) => loadAi(symbol, { refresh: true })}
           onRemove={removeSymbol}
           onOpenDetail={openDetail}
         />
@@ -191,7 +204,7 @@ export default function PortfolioWorkspace({ firstName, initialSymbols, initialG
         <DiscoverScreen ownedSymbols={symbols} profile={profile} onAdd={addSymbol} onOpenDetail={openDetail} />
       )}
 
-      {view.type === 'profile' && <ProfileScreen profile={profile} onSave={setProfile} />}
+      {view.type === 'profile' && <ProfileScreen profile={profile} onSave={saveProfile} />}
 
       {view.type === 'detail' && (
         <StockDetailScreen
@@ -199,7 +212,7 @@ export default function PortfolioWorkspace({ firstName, initialSymbols, initialG
           onBack={() => setView({ type: 'dashboard' })}
           onRetryQuote={loadQuote}
           onRetryNews={(symbol) => loadNewsFor(symbol)}
-          onRetryAi={(symbol) => loadAi(assetStates[symbol])}
+          onRetryAi={(symbol) => loadAi(symbol, { refresh: true })}
           onAddToPortfolio={addSymbol}
           isOwned={symbols.includes(view.symbol)}
         />

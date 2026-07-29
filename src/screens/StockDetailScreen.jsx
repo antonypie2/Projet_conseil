@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
-import { fetchOverview, fetchDailyHistory } from '../api/alphaVantage'
+import { fetchOverview, fetchDailyHistory } from '../api/backend'
 import AssetCard from '../components/AssetCard'
 
 function Kv({ label, value }) {

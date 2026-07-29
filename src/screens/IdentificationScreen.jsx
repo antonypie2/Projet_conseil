@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export default function IdentificationScreen({ onNext }) {
+export default function IdentificationScreen({ onNext, bootstrapError }) {
   const [firstName, setFirstName] = useState('')
 
   function handleSubmit(e) {
@@ -17,6 +17,14 @@ export default function IdentificationScreen({ onNext }) {
         <p className="subtitle">
           Comprenez ce qui se passe réellement sur votre portefeuille, sans y passer des heures.
         </p>
+        {bootstrapError && (
+          <div className="error-box">
+            <p>
+              ⚠️ Serveur backend injoignable ({bootstrapError}). Vos données ne pourront pas être
+              sauvegardées tant qu'il n'est pas démarré, mais vous pouvez continuer.
+            </p>
+          </div>
+        )}
         <form onSubmit={handleSubmit}>
           <label htmlFor="firstName">Votre prénom</label>
           <input
